@@ -1,14 +1,20 @@
 package com.ideacollab.controller;
 
+import com.ideacollab.dto.CollaborationDto;
 import com.ideacollab.dto.IdeaDto;
+import com.ideacollab.exception.ConflictException;
+import com.ideacollab.exception.ResourceNotFoundException;
+import com.ideacollab.exception.UnauthorizedAccessException;
 import com.ideacollab.service.IdeaService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,10 +25,14 @@ public class IdeaController {
 
     @Autowired
     private IdeaService ideaService;
+    
 
     @GetMapping("/")
-    public ResponseEntity<List<IdeaDto>> getAllIdeas() {
-        List<IdeaDto> ideas = ideaService.getAllIdeas();
+    public ResponseEntity<List<IdeaDto>> getAllIdeas(
+            @RequestParam(required = false, defaultValue = "createdAt") String sortBy,
+            @RequestParam(required = false, defaultValue = "desc") String sortOrder) {
+
+        List<IdeaDto> ideas = ideaService.getAllIdeas(sortBy, sortOrder);
         return ResponseEntity.ok(ideas);
     }
 
@@ -60,15 +70,33 @@ public class IdeaController {
     }
 
 
+
     @PostMapping("/{id}/vote")
-    public ResponseEntity<Void> voteIdea(@PathVariable Long id, @RequestParam boolean upvote) {
-        ideaService.voteIdea(id, upvote);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Map<String, String>> voteIdea(@PathVariable Long id, @RequestParam boolean upvote) {
+        try {
+            ideaService.voteIdea(id, upvote);
+            return ResponseEntity.ok(
+                    Collections.singletonMap("message",
+                            upvote ? "Upvoted successfully!" : "Downvoted successfully!")
+            );
+        } catch (UnauthorizedAccessException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Collections.singletonMap("error", e.getMessage()));
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.singletonMap("error", e.getMessage()));
+        }
     }
 
     @PostMapping("/{id}/collaborate")
-    public ResponseEntity<Void> collaborateOnIdea(@PathVariable Long id) {
-        ideaService.addCollaborator(id);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<CollaborationDto> collaborateOnIdea(@PathVariable Long id) throws ConflictException {
+        CollaborationDto collaboration = ideaService.addCollaborator(id);
+        return ResponseEntity.ok(collaboration);
+    }
+
+    @GetMapping("/{id}/collaborators")
+    public ResponseEntity<List<CollaborationDto>> getCollaborators(@PathVariable Long id) {
+        List<CollaborationDto> collaborators = ideaService.getCollaborators(id);
+        return ResponseEntity.ok(collaborators);
     }
 }

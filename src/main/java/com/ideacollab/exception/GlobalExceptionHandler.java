@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -27,6 +26,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(UserDoesNotExistException.class)
     public ResponseEntity<?> handleUserDoesNotExistException(UserDoesNotExistException ex, WebRequest request) {
         return buildResponse(ex.getMessage(), request, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<?> handleConflictException(ConflictException ex, WebRequest request) {
+        return buildResponse(ex.getMessage(), request, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(Exception.class)

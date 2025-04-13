@@ -83,11 +83,6 @@ public class JwtService {
         }
     }
 
-//    // Helper methods
-//    public String extractEmail(String token) {
-//        return extractClaim(token, Claims::getSubject);
-//    }
-
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
@@ -105,10 +100,6 @@ public class JwtService {
                 .getPayload();
     }
 
-//    public boolean isTokenValid(String token, String email) {
-//        final String tokenEmail = extractEmail(token);
-//        return (email.equals(tokenEmail) && !isTokenExpired(token));
-//    }
 
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());

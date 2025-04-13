@@ -1,7 +1,6 @@
 package com.ideacollab.service;
 
 
-import com.ideacollab.dto.LogoutResponseDto;
 import com.ideacollab.dto.UserDto;
 import com.ideacollab.exception.UserAlreadyExistsException;
 import com.ideacollab.exception.UserDoesNotExistException;
@@ -70,20 +69,15 @@ public class AuthService {
 
     }
 
-    // Note: This method should return a custom object containing token, headers, etc
-    // For now, to avoid creating an object, directly returning ResponseEntity from here
     public ResponseEntity<UserDto> login(String email, String password) throws UserDoesNotExistException {
         Optional<User> userOptional = userRepository.findByEmail(email);
 
-        // Throw exception if user not found
         if (userOptional.isEmpty()) {
             throw new UserDoesNotExistException("User does not exist with email: " + email);
         }
-        // User is present in DB
 
-        User user = userOptional.get(); // now get the user as it exist in db
+        User user = userOptional.get();
 
-        // If password does not match
         if (!bCryptPasswordEncoder.matches(password, user.getHashedPassword())) {
             throw new UserDoesNotExistException("Invalid credentials");
         }

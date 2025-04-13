@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  builder:
+    image: maven:3.8.6-openjdk-17
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: mvn package -DskipTests
+    environment:
+      - MAVEN_CONFIG=/app/.m2
+
+
+  app:
+    build:
+      context: .
+      target: runtime
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/CollabDB
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      - mysql
+    restart: unless-stopped
+
+  # Database service (unchanged)
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=CollabDB
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
