@@ -1,4 +1,4 @@
-# Project Visualization And Controll Flow
+# Project Visualization And Control Flow
 
 
 ```mermaid
