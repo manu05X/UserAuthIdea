@@ -15,4 +15,7 @@ public interface IdeaRepository extends JpaRepository<Idea, Long> {
 
     @Query("SELECT i FROM Idea i LEFT JOIN i.votes v GROUP BY i ORDER BY COUNT(v) DESC")
     List<Idea> findAllOrderByVoteCountDesc();
+
+    @Query("SELECT DISTINCT i FROM Idea i LEFT JOIN FETCH i.tags")
+    List<Idea> findAllWithTags();
 }

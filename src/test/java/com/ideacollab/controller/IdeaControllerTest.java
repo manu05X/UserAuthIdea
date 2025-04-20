@@ -5,6 +5,7 @@ import com.ideacollab.dto.IdeaDto;
 import com.ideacollab.exception.ConflictException;
 import com.ideacollab.exception.ResourceNotFoundException;
 import com.ideacollab.exception.UnauthorizedAccessException;
+import com.ideacollab.model.SortOption;
 import com.ideacollab.service.IdeaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,13 +43,13 @@ class IdeaControllerTest {
     @Test
     void testGetAllIdeas() {
         List<IdeaDto> mockIdeas = List.of(new IdeaDto(), new IdeaDto());
-        when(ideaService.getAllIdeas("createdAt", "desc")).thenReturn(mockIdeas);
+        when(ideaService.getAllIdeasSorted("createdAt", "desc")).thenReturn(mockIdeas);
 
-        ResponseEntity<List<IdeaDto>> response = ideaController.getAllIdeas("createdAt", "desc");
+        ResponseEntity<List<IdeaDto>> response = ideaController.getAllIdeas(SortOption.NONE, "String");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(mockIdeas, response.getBody());
-        verify(ideaService, times(1)).getAllIdeas("createdAt", "desc");
+        verify(ideaService, times(1)).getAllIdeasSorted("createdAt", "desc");
     }
 
     @Test

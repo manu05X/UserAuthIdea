@@ -2,9 +2,14 @@ package com.ideacollab.controller;
 
 import com.ideacollab.dto.CollaborationDto;
 import com.ideacollab.dto.IdeaDto;
+import com.ideacollab.dto.TagDto;
+import com.ideacollab.dto.TagRequestDto;
 import com.ideacollab.exception.ConflictException;
 import com.ideacollab.exception.ResourceNotFoundException;
 import com.ideacollab.exception.UnauthorizedAccessException;
+import com.ideacollab.model.SortOption;
+import com.ideacollab.model.Tag;
+import com.ideacollab.repository.TagRepository;
 import com.ideacollab.service.IdeaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/ideas")
@@ -26,13 +32,36 @@ public class IdeaController {
     @Autowired
     private IdeaService ideaService;
     
-
+/*
     @GetMapping("/")
     public ResponseEntity<List<IdeaDto>> getAllIdeas(
             @RequestParam(required = false, defaultValue = "createdAt") String sortBy,
             @RequestParam(required = false, defaultValue = "desc") String sortOrder) {
 
         List<IdeaDto> ideas = ideaService.getAllIdeas(sortBy, sortOrder);
+        return ResponseEntity.ok(ideas);
+    }
+
+    */
+
+    @GetMapping("/")
+    public ResponseEntity<List<IdeaDto>> getAllIdeas(
+            @RequestParam(required = false, defaultValue = "NONE") SortOption sortBy,
+            @RequestParam(required = false, defaultValue = "desc") String sortOrder) {
+
+        List<IdeaDto> ideas;
+
+        if (sortBy == SortOption.NONE) {
+            ideas = ideaService.getAllIdeas();
+        }
+        else {
+            String sortField = sortBy == SortOption.VOTES ? "votes"
+                    : sortBy == SortOption.CREATED_AT ? "createdAt"
+                    : "updatedAt";
+
+            ideas = ideaService.getAllIdeasSorted(sortField, sortOrder);
+        }
+
         return ResponseEntity.ok(ideas);
     }
 
@@ -99,4 +128,18 @@ public class IdeaController {
         List<CollaborationDto> collaborators = ideaService.getCollaborators(id);
         return ResponseEntity.ok(collaborators);
     }
+
+    @GetMapping("/tags")
+    public ResponseEntity<List<TagDto>> getAllTags(){
+        List<TagDto> tags = ideaService.getAllTags();
+
+        return new ResponseEntity<>(tags, HttpStatus.OK);
+    }
+
+    @PostMapping("/tags")
+    public ResponseEntity<TagDto> createTag(@RequestBody TagRequestDto requestDto){
+
+        return ResponseEntity.ok(ideaService.createTag(requestDto));
+    }
+
 }

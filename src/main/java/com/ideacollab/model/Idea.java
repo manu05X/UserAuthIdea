@@ -39,7 +39,7 @@ public class Idea extends BaseModel{
     @OneToMany(mappedBy = "idea", cascade = CascadeType.ALL)
     private List<Collaboration> collaborations = new ArrayList<>();
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "idea_tags",
             joinColumns = @JoinColumn(name = "idea_id"),

@@ -68,7 +68,7 @@ class IdeaServiceTest {
 
         when(ideaRepository.findAll(any(Sort.class))).thenReturn(ideas);
 
-        List<IdeaDto> result = ideaService.getAllIdeas("createdAt", "desc");
+        List<IdeaDto> result = ideaService.getAllIdeasSorted("createdAt", "desc");
 
         assertEquals(1, result.size());
         assertEquals("Test Idea", result.get(0).getTitle());

@@ -2,14 +2,13 @@ package com.ideacollab.service;
 
 import com.ideacollab.dto.CollaborationDto;
 import com.ideacollab.dto.IdeaDto;
+import com.ideacollab.dto.TagDto;
+import com.ideacollab.dto.TagRequestDto;
 import com.ideacollab.exception.ConflictException;
 import com.ideacollab.exception.ResourceNotFoundException;
 import com.ideacollab.exception.UnauthorizedAccessException;
 import com.ideacollab.model.*;
-import com.ideacollab.repository.CollaborationRepository;
-import com.ideacollab.repository.IdeaRepository;
-import com.ideacollab.repository.UserRepository;
-import com.ideacollab.repository.VoteRepository;
+import com.ideacollab.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,10 +16,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -32,6 +28,9 @@ public class IdeaService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private TagRepository tagRepository;
 
     @Autowired
     private VoteRepository voteRepository;
@@ -52,14 +51,32 @@ public class IdeaService {
     }
 
 
-//    public List<IdeaDto> getAllIdeas(String sortBy, String sortOrder) {
-//        Sort sort = createSort(sortBy, sortOrder);
-//        return ideaRepository.findAll(sort).stream()
-//                .map(this::convertToDto)
-//                .collect(Collectors.toList());
-//    }
+    public List<IdeaDto> getAllIdeas() {
+        try {
+            // Fetch all ideas from database
+            List<Idea> ideas = ideaRepository.findAll();
 
-    public List<IdeaDto> getAllIdeas(String sortBy, String sortOrder) {
+            // Return empty list if no ideas found
+            if (ideas.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            // Convert to DTOs
+            return ideas.stream()
+                    .map(idea -> {
+                        IdeaDto dto = convertToDto(idea);
+                        // Add any additional processing here if needed
+                        return dto;
+                    })
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+
+            throw new ResourceNotFoundException("Unexpected server error", e);
+        }
+    }
+
+    public List<IdeaDto> getAllIdeasSorted(String sortBy, String sortOrder) {
         if ("votes".equalsIgnoreCase(sortBy)) {
             if ("asc".equalsIgnoreCase(sortOrder)) {
                 return ideaRepository.findAllOrderByVoteCountAsc().stream()
@@ -110,10 +127,23 @@ public class IdeaService {
         User creator = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
+
+        Set<Tag> tags = new HashSet<>();
+        if(ideaDto.getTags() != null){
+            for (String tagName : ideaDto.getTags()){
+                Tag tag = tagRepository.findByName(tagName)
+                        .orElseThrow(()->new RuntimeException("Tag not found: "+tagName));
+
+                tags.add(tag);
+            }
+        }
+
+
         Idea idea = new Idea();
         idea.setTitle(ideaDto.getTitle());
         idea.setDescription(ideaDto.getDescription());
         idea.setCreator(creator);
+        idea.setTags(tags);
         idea.setCreatedAt(LocalDateTime.now());
         idea.setUpdatedAt(LocalDateTime.now());
 
@@ -269,4 +299,24 @@ public class IdeaService {
 
         return dto;
     }
+
+
+    public List<TagDto> getAllTags(){
+        return  tagRepository.findAll().stream()
+                .map(tag -> new TagDto(tag.getId(), tag.getName()))
+                .collect(Collectors.toList());
+    }
+
+    public TagDto createTag(TagRequestDto requestDto){
+        Tag tag = new Tag();
+        tag.setName(requestDto.getName());
+        Tag saveTag = tagRepository.save(tag);
+
+        TagDto tagDto = new TagDto();
+        tagDto.setId(saveTag.getId());
+        tagDto.setName(saveTag.getName());
+
+        return tagDto;
+    }
+
 }

@@ -12,13 +12,33 @@ public class DtoMapper {
 
     public IdeaDto toIdeaDto(Idea idea) {
         IdeaDto dto = new IdeaDto();
+        // Basic fields
         dto.setTitle(idea.getTitle());
         dto.setDescription(idea.getDescription());
-        dto.setVoteCount((int) idea.getVotes().stream().filter(Vote::isUpvote).count());
+
+        // Creator info
+        if (idea.getCreator() != null) {
+            dto.setCreatorId(idea.getCreator().getId());
+            dto.setCreatorName(idea.getCreator().getName());
+        }
+
+        // Timestamps
+        dto.setCreatedAt(idea.getCreatedAt());
+        dto.setUpdatedAt(idea.getUpdatedAt());
+
+        // Votes count
+        dto.setVoteCount((int) idea.getVotes().stream()
+                .filter(Vote::isUpvote)
+                .count());
+
+        // Collaborations count
         dto.setCollaborationCount(idea.getCollaborations().size());
+
+        // Tags - EAGER fetch or proper initialization needed
         dto.setTags(idea.getTags().stream()
                 .map(Tag::getName)
                 .collect(Collectors.toSet()));
+
         return dto;
     }
 
@@ -48,4 +68,5 @@ public class DtoMapper {
         dto.setJoinedAt(collaboration.getJoinedAt());
         return dto;
     }
+
 }
